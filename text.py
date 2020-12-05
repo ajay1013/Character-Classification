@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Created on Fri Dec  4 17:34:56 2020
+Created on Sat Dec  5 16:06:59 2020
 
 @author: dell
 """
@@ -15,6 +15,8 @@ from tensorflow.keras.models import load_model
 
 app = Flask(__name__)
 
+upload_folder = r'C:\Users\dell'
+
 MODEL_PATH = 'OCRmodel.h5'
 model = load_model(MODEL_PATH)
 
@@ -28,27 +30,16 @@ def model_predict(image_path):
   result = np.argmax(probab)
   return result
 
-
-@app.route('/', methods=['GET'])
-def home():
-    return render_template('Sample.html')
-
-@app.route('/predict',methods=['GET','POST'])
+@app.route('/',methods=['GET','POST'])
 def predict():
-    
     if request.method == 'POST':
-        f = request.files['file']
-
-        # Save the file to ./uploads
-        basepath = os.path.dirname(__file__)
-        file_path = os.path.join(basepath, 'uploads')
-        f.save(file_path)
-
-        # Make prediction
-        preds = model_predict(file_path, model)
-
-        return preds
-    return None
+        image_file = request.files['image']
+        if image_file:
+            file_path = os.path.join(upload_folder, image_file.filename)
+            image_file.save(file_path)
+            preds = model_predict(file_path)
+            return render_template("Sample.html", prediction=preds)
+    return render_template("Sample.html", prediction='NAN')
 
 if __name__ == "__main__":
-    app.run()
+    app.run(port=12000)
